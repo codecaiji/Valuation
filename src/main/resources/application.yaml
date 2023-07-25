@@ -1,0 +1,20 @@
+# server port
+server:
+  port: 12345
+#  servlet:
+#    session:
+#      timeout: 7200
+#    # servlet config
+#    context-path: /Valuation/
+
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@//localhost:1521/ORCL
+    username: scott
+    password: scott
+    driver-class-name: oracle.jdbc.OracleDriver
+
+mybatis-plus:
+  mapper-locations: classpath:com/icbc/valuation/mapper/*Mapper.xml
+  type-aliases-package: com.icbc.valuation.entity
+  type-enums-package: com.icbc.valuation.model.enums
