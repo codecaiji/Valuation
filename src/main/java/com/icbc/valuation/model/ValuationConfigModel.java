@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.List;
-import java.util.Map;
 
 @Data
 @Accessors(chain = true)
@@ -13,7 +12,11 @@ public class ValuationConfigModel {
 
     private String name;
 
-    private Map<String, Map<String, Double>> attriConfigs;
+    private String description;
+
+    private String status;
+
+    private List<AttriConfig> attriConfigs; //Map<String, Map<String, Double>>
 
     private List<CompuFormula> rangeConfigs;
 

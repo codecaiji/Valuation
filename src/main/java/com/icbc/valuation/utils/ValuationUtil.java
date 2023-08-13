@@ -1,7 +1,9 @@
 package com.icbc.valuation.utils;
 
 import com.googlecode.aviator.AviatorEvaluator;
+import com.icbc.valuation.model.AttriConfig;
 import com.icbc.valuation.model.CompuFormula;
+import com.icbc.valuation.model.FieldScore;
 import com.icbc.valuation.model.SheetData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -55,6 +57,20 @@ public class ValuationUtil {
         return outputList;
     }
 
+    public static Map<String, Map<String, Double>> attriListToMap(List<AttriConfig> attriConfigs) {
+        Map<String, Map<String, Double>> attriConfigsMap = new HashMap<>();
+
+        for (AttriConfig attriConfig : attriConfigs) {
+            Map<String, Double> attriConfigMap = new HashMap<>();
+
+            for (FieldScore fieldScore : attriConfig.getFieldScores()) {
+                attriConfigMap.put(fieldScore.getField(), fieldScore.getScore());
+            }
+            attriConfigsMap.put(attriConfig.getName(), attriConfigMap);
+        }
+        return attriConfigsMap;
+    }
+
     public static void transToScoresByConfig(List<SheetData> uploadData,
         Map<String, Map<String, Double>> attriConfigs, List<CompuFormula> rangeConfigs) {
         if (CollectionUtils.isEmpty(uploadData)) {
@@ -95,6 +111,38 @@ public class ValuationUtil {
         }
         return attriScores;
     }
+
+    /*public static List<Map<String, Object>> transToScoreByAttriConfig(
+            List<AttriConfig> attriConfigs, List<Map<String, Object>> params) {
+        List<Map<String, Object>> attriScores = new LinkedList<>();
+        if (CollectionUtils.isEmpty(params)) {
+            return params;
+        }
+        for (Map<String, Object> param : params) {
+            Map<String, Object> attriScore = new HashMap<>();
+
+            for (Map.Entry<String, Object> entry : param.entrySet()) {
+                try {
+                    if (CollectionUtils.isNotEmpty(attriConfigs)) {
+                        for (AttriConfig attriConfig : attriConfigs) {
+                            if (entry.getKey().equals(attriConfig.getAttriName())) {
+
+                            }
+                        }
+                        attriScore.put(entry.getKey(),
+                                attriConfigs.get(entry.getKey()).getOrDefault(entry.getValue(), 0.0));
+                    } else {
+                        attriScore.put(entry.getKey(), Double.parseDouble(entry.getValue().toString()));
+                    }
+                } catch (NumberFormatException e) {
+                    attriScore.put(entry.getKey(), 0.0);
+                }
+            }
+
+            attriScores.add(attriScore);
+        }
+        return attriScores;
+    }*/
 
     public static List<Map<String, Object>> transToScoreByRangeConfig(List<CompuFormula> rangeConfigs, List<Map<String, Object>> params) {
         List<Map<String, Object>> rangeScores = new LinkedList<>();

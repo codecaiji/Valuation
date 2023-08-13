@@ -7,7 +7,7 @@ public enum Status {
     INTERNAL_SERVER_FAILED(10000, "服务端异常: {0}"),
 
     DATA_UPLOAD_FAILED(20001, "数据上传失败：{0}"),
-    DATA_EMPTY(20002, "数据为空，请先上传数据"),
+    DATA_EMPTY(20002, "文件数据为空，请先上传数据"),
     COMPUTE_FAILED(20003, "计算失败：{0}"),
     CLEAN_FAILED(20004, "数据初始化失败：{0}"),
 

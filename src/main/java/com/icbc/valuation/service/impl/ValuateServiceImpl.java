@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.icbc.valuation.entity.ValuationConfig;
 import com.icbc.valuation.mapper.ValuationConfigMapper;
+import com.icbc.valuation.model.AttriConfig;
 import com.icbc.valuation.model.Authority;
 import com.icbc.valuation.model.CompuFormula;
 import com.icbc.valuation.model.SheetData;
@@ -44,7 +45,7 @@ public class ValuateServiceImpl extends BaseService implements ValuateService {
     ValuationConfigMapper valuationConfigMapper;
 
     @Override
-    public Map<String, Object> compute(Authority authority, String configName) {
+    public Map<String, Object> compute(Authority authority, Integer configId) {
         Map<String, Object> result = new HashMap<>();
         List<SheetData> uploadData = JSON.parseObject(JSON.toJSONString(request.getSession().getAttribute(UPLOAD_DATA)),
                 new TypeReference<List<SheetData>>(){});
@@ -56,17 +57,21 @@ public class ValuateServiceImpl extends BaseService implements ValuateService {
         }
 
         ValuationConfig valuationConfig = valuationConfigMapper.selectOne(
-                new QueryWrapper<ValuationConfig>().lambda().eq(ValuationConfig::getName, configName));
+                new QueryWrapper<ValuationConfig>().lambda().eq(ValuationConfig::getId, configId));
         if (ObjectUtils.isEmpty(valuationConfig)) {
-            putMsg(result, CONFIG_NOT_EXIST, configName);
+            putMsg(result, CONFIG_NOT_EXIST, configId);
             return result;
         }
 
-        Map<String, Map<String, Double>> attriConfigs =
-                JSON.parseObject(valuationConfig.getAttriConfigs(), new TypeReference<Map<String, Map<String, Double>>>() {});
+        /*Map<String, Map<String, Double>> attriConfigs =
+                JSON.parseObject(valuationConfig.getAttriConfigs(), new TypeReference<Map<String, Map<String, Double>>>() {});*/
+        List<AttriConfig> attriConfigs =
+                JSON.parseObject(valuationConfig.getAttriConfigs(), new TypeReference<List<AttriConfig>>() {});
         List<CompuFormula> rangeConfigs =
                 JSON.parseArray(valuationConfig.getRangeConfigs(), CompuFormula.class);
-        ValuationUtil.transToScoresByConfig(uploadData, attriConfigs, rangeConfigs);
+
+        Map<String, Map<String, Double>> attriConfigsMap = ValuationUtil.attriListToMap(attriConfigs);
+        ValuationUtil.transToScoresByConfig(uploadData, attriConfigsMap, rangeConfigs);
 
         List<CompuFormula> compuFormulas =
                 JSON.parseArray(valuationConfig.getCompuFormulas(), CompuFormula.class);
@@ -74,9 +79,10 @@ public class ValuateServiceImpl extends BaseService implements ValuateService {
 
         //输出excel
         PoiUtils poiUtils = new PoiUtils();
-        poiUtils.output(outputList);
 //        poiUtils.output(response, outputList);
-        return success(result, outputList);
+        /*poiUtils.output(outputList);
+        return success(result, outputList);*/
+        return success(result, poiUtils.outputToBase64(outputList));
     }
 
     @Override

@@ -26,13 +26,13 @@ public class ValuationController extends BaseController {
     private ValuateService valuateService;
 
     @ApiOperation(value = "按公式计算", notes = "返回excel结果")
-    @GetMapping(value = "/compute")
+    @GetMapping(value = "/compute/{id}")
     @ResponseStatus(HttpStatus.OK)
     @ApiException(COMPUTE_FAILED)
     public Result<Object> compute(
             @ApiIgnore @RequestAttribute(value = AUTHORITY) Authority authority,
-            @RequestParam("configName") String configName) {
-        Map<String, Object> result = valuateService.compute(authority, configName);
+            @PathVariable("id") Integer configId) {
+        Map<String, Object> result = valuateService.compute(authority, configId);
         return returnData(result);
     }
 

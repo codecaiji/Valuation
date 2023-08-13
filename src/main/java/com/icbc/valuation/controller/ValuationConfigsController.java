@@ -3,6 +3,7 @@ package com.icbc.valuation.controller;
 import com.icbc.valuation.configuration.aspect.ApiException;
 import com.icbc.valuation.model.Authority;
 import com.icbc.valuation.model.Result;
+import com.icbc.valuation.model.ValuationConfigModel;
 import com.icbc.valuation.service.ValuationConfigService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,23 +32,26 @@ public class ValuationConfigsController extends BaseController {
     public Result<Object> createValuationConfig(
             @ApiIgnore @RequestAttribute(value = AUTHORITY) Authority authority,
             @RequestParam(value = "name") String configName,
-            @RequestParam(value = "attriConfigs") String attriConfigs,
-            @RequestParam(value = "rangeConfigs") String rangeConfigs,
-            @RequestParam(value = "compuFormulas") String compuFormulas) {
+            @RequestParam(value = "description") String description,
+            @RequestParam(value = "status") String status,
+            @RequestParam(value = "attriConfigs", required = false, defaultValue = "[]") String attriConfigs,
+            @RequestParam(value = "rangeConfigs", required = false, defaultValue = "[]") String rangeConfigs,
+            @RequestParam(value = "compuFormulas", required = false, defaultValue = "[]") String compuFormulas) {
         Map<String, Object> result =
-                valuationConfigService.createValuationConfig(authority, configName, attriConfigs, rangeConfigs, compuFormulas);
+                valuationConfigService.createValuationConfig(authority, configName, description, status,
+                        attriConfigs, rangeConfigs, compuFormulas);
         return returnData(result);
     }
 
     @ApiOperation(value = "按名称获取配置表", notes = "")
-    @GetMapping(value = "/{name}")
+    @GetMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.OK)
     @ApiException(CONFIG_QUERY_FAILED)
     public Result<Object> getValuationConfigByName(
             @ApiIgnore @RequestAttribute(value = AUTHORITY) Authority authority,
-            @PathVariable(value = "name") String name) {
+            @PathVariable(value = "id") Integer id) {
         Map<String, Object> result =
-                valuationConfigService.getValuationConfigByName(authority, name);
+                valuationConfigService.getValuationConfigDetail(authority, id);
         return returnData(result);
     }
 
@@ -57,27 +61,28 @@ public class ValuationConfigsController extends BaseController {
     @ApiException(CONFIG_QUERY_LIST_FAILED)
     public Result<Object> getValuationConfigs(
             @ApiIgnore @RequestAttribute(value = AUTHORITY) Authority authority,
-            @RequestParam(value = "pageNo", required = false, defaultValue = "1") int pageNo,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "10") int pageSize) {
+            @RequestParam(value = "currentPage", required = false, defaultValue = "1") int currentPage,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "5") int pageSize) {
         Map<String, Object> result =
-                valuationConfigService.getValuationConfigs(authority, pageNo, pageSize);
+                valuationConfigService.getValuationConfigs(authority, currentPage, pageSize);
         return returnData(result);
     }
 
     @ApiOperation(value = "修改配置表", notes = "")
-    @PutMapping(value = "")
+    @PutMapping(value = "{id}")
     @ResponseStatus(HttpStatus.OK)
     @ApiException(CONFIG_UPDATE_FAILED)
     public Result<Object> updateValuationConfig(
             @ApiIgnore @RequestAttribute(value = AUTHORITY) Authority authority,
-            @RequestParam(value = "id") Integer id,
+            @PathVariable(value = "id") Integer id,
+            @RequestBody ValuationConfigModel valuationConfig
+            /*@RequestParam(value = "id") Integer id,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "attriConfigs", required = false) String attriConfigs,
             @RequestParam(value = "rangeConfigs", required = false) String rangeConfigs,
-            @RequestParam(value = "compuFormulas", required = false) String compuFormulas) {
+            @RequestParam(value = "compuFormulas", required = false) String compuFormulas*/) {
         Map<String, Object> result =
-                valuationConfigService.updateValuationConfig(authority, id, name,
-                        attriConfigs, rangeConfigs, compuFormulas);
+                valuationConfigService.updateValuationConfig(authority, id, valuationConfig);
         return returnData(result);
     }
 

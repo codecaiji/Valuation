@@ -16,6 +16,10 @@ public class ValuationConfig {
 
     private String name;
 
+    private String description;
+
+    private String status;
+
     private String attriConfigs;
 
     private String rangeConfigs;

@@ -6,6 +6,7 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
@@ -23,11 +24,12 @@ public class DefaultMetaObjectHandler implements MetaObjectHandler {
         this.setFieldValByName("createTime", now, metaObject);
         this.setFieldValByName("modifyTime", now, metaObject);
 
+        String userName = StringUtils.hasText(getCurrentAuthority().getUserName()) ? getCurrentAuthority().getUserName() : "";
         if (metaObject.hasGetter(CREATEUSER) && ObjectUtils.isEmpty(metaObject.getValue(CREATEUSER))) {
-            this.setFieldValByName("createUser", getCurrentAuthority().getUserName(), metaObject);
+            this.setFieldValByName("createUser", userName, metaObject);
         }
         // 修改者始终自动填充
-        this.setFieldValByName("modifyUser", getCurrentAuthority().getUserName(), metaObject);
+        this.setFieldValByName("modifyUser", userName, metaObject);
     }
 
     @Override

@@ -65,9 +65,7 @@ public class PoiUtils implements Closeable {
         try (OutputStream fileOut = new FileOutputStream(outputFileName)) {
             outputWorkbook(outputList);
             workbook.write(fileOut);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        }  catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -76,12 +74,24 @@ public class PoiUtils implements Closeable {
         try {
             outputWorkbook(outputList);
             workbook.write(response.getOutputStream());
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        }  catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
+    public String outputToBase64(List<SheetData> outputList) {
+        // 将Workbook转换为二进制数据
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            outputWorkbook(outputList);
+            workbook.write(outputStream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        // 将二进制数据转换为Base64编码的字符串
+        return Base64.getEncoder().encodeToString(outputStream.toByteArray());
+    }
+
 
     private void outputWorkbook(List<SheetData> outputList) {
         for (SheetData outputSheet : outputList) {

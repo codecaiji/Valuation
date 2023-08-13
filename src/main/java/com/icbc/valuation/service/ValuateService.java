@@ -10,7 +10,7 @@ import java.util.Map;
 @Service
 public interface ValuateService {
 
-    Map<String, Object> compute(Authority authority, String configName);
+    Map<String, Object> compute(Authority authority, Integer configId);
 
     Map<String, Object> upload(Authority authority, MultipartFile file) throws IOException;
 
