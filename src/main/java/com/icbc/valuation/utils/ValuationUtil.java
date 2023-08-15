@@ -27,7 +27,7 @@ public class ValuationUtil {
             List<Map<String, Object>> outputScores = new LinkedList<>();
             for (Map<String, Object> paramsScore : uploadSheetData.getParamsScores()) {
                 //TODO:可预编译优化执行速度
-                Map<String, Object> outputMap = new TreeMap<>();
+                Map<String, Object> outputMap = new LinkedHashMap<>();
                 for (CompuFormula formula : formulas) {
                     try {
                         //TODO:使用计算函数的参数为空时抛出的异常无法捕获
@@ -114,38 +114,6 @@ public class ValuationUtil {
         return attriScores;
     }
 
-    /*public static List<Map<String, Object>> transToScoreByAttriConfig(
-            List<AttriConfig> attriConfigs, List<Map<String, Object>> params) {
-        List<Map<String, Object>> attriScores = new LinkedList<>();
-        if (CollectionUtils.isEmpty(params)) {
-            return params;
-        }
-        for (Map<String, Object> param : params) {
-            Map<String, Object> attriScore = new HashMap<>();
-
-            for (Map.Entry<String, Object> entry : param.entrySet()) {
-                try {
-                    if (CollectionUtils.isNotEmpty(attriConfigs)) {
-                        for (AttriConfig attriConfig : attriConfigs) {
-                            if (entry.getKey().equals(attriConfig.getAttriName())) {
-
-                            }
-                        }
-                        attriScore.put(entry.getKey(),
-                                attriConfigs.get(entry.getKey()).getOrDefault(entry.getValue(), 0.0));
-                    } else {
-                        attriScore.put(entry.getKey(), Double.parseDouble(entry.getValue().toString()));
-                    }
-                } catch (NumberFormatException e) {
-                    attriScore.put(entry.getKey(), 0.0);
-                }
-            }
-
-            attriScores.add(attriScore);
-        }
-        return attriScores;
-    }*/
-
     public static List<Map<String, Object>> transToScoreByRangeConfig(List<CompuFormula> rangeConfigs, List<Map<String, Object>> params) {
         List<Map<String, Object>> rangeScores = new LinkedList<>();
         if (CollectionUtils.isEmpty(rangeConfigs) || CollectionUtils.isEmpty(params)) {
@@ -157,12 +125,15 @@ public class ValuationUtil {
                 for (CompuFormula valueConfig : rangeConfigs) {
                     try {
                         if (entry.getKey().equals(valueConfig.getTargetName())) {
-                            rangeScore.put(valueConfig.getTargetName(), AviatorEvaluator.execute(valueConfig.getFunc(), param));
+                            Object output = AviatorEvaluator.execute(valueConfig.getFunc(), param);
+                            rangeScore.put(valueConfig.getTargetName(), output);
+                            entry.setValue(output);
                         } else {
                             rangeScore.put(entry.getKey(), Double.parseDouble(entry.getValue().toString()));
                         }
                     } catch (NumberFormatException e) {
                         rangeScore.put(entry.getKey(), 0.0);
+                        entry.setValue(0.0);
                     }
                 }
             }
