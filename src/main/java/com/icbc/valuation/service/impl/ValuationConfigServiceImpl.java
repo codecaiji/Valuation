@@ -18,6 +18,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -74,12 +75,22 @@ public class ValuationConfigServiceImpl extends BaseService implements Valuation
     }
 
     @Override
-    public Map<String, Object> getValuationConfigs(Authority authority, int currentPage, int pageSize) {
+    public Map<String, Object> getValuationConfigs(Authority authority, int currentPage, int pageSize, String queryString, String status) {
         Map<String, Object> result = new HashMap<>();
 
+        LambdaQueryWrapper<ValuationConfig> queryWrapper = new LambdaQueryWrapper<>();
+
+        if (StringUtils.hasText(status)) {
+            queryWrapper.eq(ValuationConfig::getStatus, status);
+        }
+        if (StringUtils.hasText(queryString)) {
+            queryWrapper.and(wrapper ->
+                    wrapper.like(ValuationConfig::getName, queryString).or().like(ValuationConfig::getCreateUser, queryString)
+                        .or().like(ValuationConfig::getModifyUser, queryString).or().like(ValuationConfig::getDescription, queryString)
+            );
+        }
         Page<ValuationConfig> page = new Page<>(currentPage, pageSize);
-        IPage<ValuationConfig> iPage = valuationConfigMapper.selectPage(page,
-                new QueryWrapper<ValuationConfig>().lambda());
+        IPage<ValuationConfig> iPage = valuationConfigMapper.selectPage(page, queryWrapper);
 
         return success(result, iPage);
     }
@@ -122,6 +133,24 @@ public class ValuationConfigServiceImpl extends BaseService implements Valuation
         int deleteRes = valuationConfigMapper.deleteBatchIds(ids);
 
         return success(result, deleteRes);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Map<String, Object> changeConfigStatus(Authority authority, Integer id, String status) {
+        Map<String, Object> result = new HashMap<>();
+
+        ValuationConfig valuationConfig = valuationConfigMapper.selectOne(new LambdaQueryWrapper<ValuationConfig>()
+                .eq(ValuationConfig::getId, id));
+        if (ObjectUtils.isEmpty(valuationConfig)) {
+            putMsg(result, CONFIG_NOT_EXIST, id);
+            return result;
+        }
+
+        valuationConfig.setStatus(status);
+        int updateRes = valuationConfigMapper.updateById(valuationConfig);
+
+        return success(result, updateRes);
     }
 
     private boolean checkName(String name, Map<String, Object> result) {

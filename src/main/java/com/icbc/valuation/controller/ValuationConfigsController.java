@@ -33,7 +33,7 @@ public class ValuationConfigsController extends BaseController {
             @ApiIgnore @RequestAttribute(value = AUTHORITY) Authority authority,
             @RequestParam(value = "name") String configName,
             @RequestParam(value = "description") String description,
-            @RequestParam(value = "status") String status,
+            @RequestParam(value = "status", required = false, defaultValue = "0") String status,
             @RequestParam(value = "attriConfigs", required = false, defaultValue = "[]") String attriConfigs,
             @RequestParam(value = "rangeConfigs", required = false, defaultValue = "[]") String rangeConfigs,
             @RequestParam(value = "compuFormulas", required = false, defaultValue = "[]") String compuFormulas) {
@@ -62,9 +62,11 @@ public class ValuationConfigsController extends BaseController {
     public Result<Object> getValuationConfigs(
             @ApiIgnore @RequestAttribute(value = AUTHORITY) Authority authority,
             @RequestParam(value = "currentPage", required = false, defaultValue = "1") int currentPage,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "5") int pageSize) {
+            @RequestParam(value = "pageSize", required = false, defaultValue = "5") int pageSize,
+            @RequestParam(value = "queryString", required = false, defaultValue = "") String queryString,
+            @RequestParam(value = "status", required = false, defaultValue = "") String status) {
         Map<String, Object> result =
-                valuationConfigService.getValuationConfigs(authority, currentPage, pageSize);
+                valuationConfigService.getValuationConfigs(authority, currentPage, pageSize, queryString, status);
         return returnData(result);
     }
 
@@ -83,6 +85,18 @@ public class ValuationConfigsController extends BaseController {
             @RequestParam(value = "compuFormulas", required = false) String compuFormulas*/) {
         Map<String, Object> result =
                 valuationConfigService.updateValuationConfig(authority, id, valuationConfig);
+        return returnData(result);
+    }
+
+    @ApiOperation(value = "修改共享状态", notes = "")
+    @PutMapping(value = "/{id}/change-status")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(CONFIG_UPDATE_FAILED)
+    public Result<Object> changeConfigStatus(
+            @ApiIgnore @RequestAttribute(value = AUTHORITY) Authority authority,
+            @PathVariable(value = "id") Integer id,
+            @RequestParam(value = "status") String status) {
+        Map<String, Object> result = valuationConfigService.changeConfigStatus(authority, id, status);
         return returnData(result);
     }
 

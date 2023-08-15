@@ -27,18 +27,20 @@ public class ValuationUtil {
             List<Map<String, Object>> outputScores = new LinkedList<>();
             for (Map<String, Object> paramsScore : uploadSheetData.getParamsScores()) {
                 //TODO:可预编译优化执行速度
-                Map<String, Object> outputMap = new HashMap<>();
+                Map<String, Object> outputMap = new TreeMap<>();
                 for (CompuFormula formula : formulas) {
                     try {
                         //TODO:使用计算函数的参数为空时抛出的异常无法捕获
                         Object output = AviatorEvaluator.execute(formula.getFunc(), paramsScore);
                         if (Objects.nonNull(output)) {
                             outputMap.put(formula.getTargetName(), output);
+                            paramsScore.put(formula.getTargetName(), output);
                         }
                     } catch (Exception e) {
                         // 公式中可能有空值
                         //throw new RuntimeException(e);
                         outputMap.put(formula.getTargetName(), null);
+                        paramsScore.put(formula.getTargetName(), null);
                         //e.printStackTrace();
                         log.warn(e.getMessage());
                     }

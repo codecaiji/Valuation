@@ -15,9 +15,11 @@ public interface ValuationConfigService {
 
     Map<String, Object> getValuationConfigDetail(Authority authority, Integer id);
 
-    Map<String, Object> getValuationConfigs(Authority authority, int currentPage, int pageSize);
+    Map<String, Object> getValuationConfigs(Authority authority, int currentPage, int pageSize, String queryString, String status);
 
     Map<String, Object> updateValuationConfig(Authority authority, Integer id, ValuationConfigModel valuationConfig);
+
+    Map<String, Object> changeConfigStatus(Authority authority, Integer id, String status);
 
     Map<String, Object> deletValuationConfig(Authority authority, List<Integer> ids);
 
