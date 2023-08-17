@@ -20,11 +20,11 @@ public class ValuationConfig {
 
     private String status;
 
-    private String attriConfigs;
+   /* private String attriConfigs;
 
     private String rangeConfigs;
 
-    private String compuFormulas;
+    private String compuFormulas;*/
 
     @TableField(fill = FieldFill.INSERT)
     private Date createTime;

@@ -2,12 +2,19 @@ package com.icbc.valuation.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.icbc.valuation.entity.AttriConfig;
+import com.icbc.valuation.entity.RangeConfig;
 import com.icbc.valuation.entity.ValuationConfig;
+import com.icbc.valuation.mapper.AttriConfigMapper;
+import com.icbc.valuation.mapper.CompuFormulaMapper;
+import com.icbc.valuation.mapper.RangeConfigMapper;
 import com.icbc.valuation.mapper.ValuationConfigMapper;
-import com.icbc.valuation.model.AttriConfig;
+import com.icbc.valuation.model.AttriConfigModel;
 import com.icbc.valuation.model.Authority;
-import com.icbc.valuation.model.CompuFormula;
+import com.icbc.valuation.entity.CompuFormula;
+import com.icbc.valuation.model.FieldScore;
 import com.icbc.valuation.model.SheetData;
 import com.icbc.valuation.service.ValuateService;
 import com.icbc.valuation.utils.PoiUtils;
@@ -26,6 +33,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.icbc.valuation.model.Constants.UPLOAD_DATA;
 import static com.icbc.valuation.model.enums.Status.CONFIG_NOT_EXIST;
@@ -43,6 +51,12 @@ public class ValuateServiceImpl extends BaseService implements ValuateService {
     HttpServletResponse response;
     @Resource
     ValuationConfigMapper valuationConfigMapper;
+    @Resource
+    AttriConfigMapper attriConfigMapper;
+    @Resource
+    RangeConfigMapper rangeConfigMapper;
+    @Resource
+    CompuFormulaMapper compuFormulaMapper;
 
     @Override
     public Map<String, Object> compute(Authority authority, Integer configId) {
@@ -63,18 +77,21 @@ public class ValuateServiceImpl extends BaseService implements ValuateService {
             return result;
         }
 
-        /*Map<String, Map<String, Double>> attriConfigs =
-                JSON.parseObject(valuationConfig.getAttriConfigs(), new TypeReference<Map<String, Map<String, Double>>>() {});*/
-        List<AttriConfig> attriConfigs =
-                JSON.parseObject(valuationConfig.getAttriConfigs(), new TypeReference<List<AttriConfig>>() {});
-        List<CompuFormula> rangeConfigs =
-                JSON.parseArray(valuationConfig.getRangeConfigs(), CompuFormula.class);
+        List<AttriConfig> attriConfigs = attriConfigMapper.selectList(new LambdaQueryWrapper<AttriConfig>()
+                .eq(AttriConfig::getConfigId, valuationConfig.getId()));
+        List<AttriConfigModel> attriConfigModels = attriConfigs.stream().map(attriConfig ->
+                        new AttriConfigModel().setName(attriConfig.getName())
+                                .setFieldScores(JSON.parseObject(attriConfig.getFieldScores(), new TypeReference<List<FieldScore>>() {})))
+                .collect(Collectors.toList());
 
-        Map<String, Map<String, Double>> attriConfigsMap = ValuationUtil.attriListToMap(attriConfigs);
+        List<RangeConfig> rangeConfigs = rangeConfigMapper.selectList(new LambdaQueryWrapper<RangeConfig>()
+                .eq(RangeConfig::getConfigId, valuationConfig.getId()));
+
+        Map<String, Map<String, Double>> attriConfigsMap = ValuationUtil.attriListToMap(attriConfigModels);
         ValuationUtil.transToScoresByConfig(uploadData, attriConfigsMap, rangeConfigs);
 
-        List<CompuFormula> compuFormulas =
-                JSON.parseArray(valuationConfig.getCompuFormulas(), CompuFormula.class);
+        List<CompuFormula> compuFormulas = compuFormulaMapper.selectList(new LambdaQueryWrapper<CompuFormula>()
+                .eq(CompuFormula::getConfigId, valuationConfig.getId()));
         List<SheetData> outputList = ValuationUtil.computeByformulas(uploadData, compuFormulas);
 
         //输出excel

@@ -6,11 +6,17 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.icbc.valuation.entity.AttriConfig;
+import com.icbc.valuation.entity.CompuFormula;
+import com.icbc.valuation.entity.RangeConfig;
 import com.icbc.valuation.entity.ValuationConfig;
+import com.icbc.valuation.mapper.AttriConfigMapper;
+import com.icbc.valuation.mapper.CompuFormulaMapper;
+import com.icbc.valuation.mapper.RangeConfigMapper;
 import com.icbc.valuation.mapper.ValuationConfigMapper;
-import com.icbc.valuation.model.AttriConfig;
+import com.icbc.valuation.model.AttriConfigModel;
 import com.icbc.valuation.model.Authority;
-import com.icbc.valuation.model.CompuFormula;
+import com.icbc.valuation.model.FieldScore;
 import com.icbc.valuation.model.ValuationConfigModel;
 import com.icbc.valuation.service.ValuationConfigService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +30,7 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.icbc.valuation.model.enums.Status.CONFIG_NAME_EXIST;
 import static com.icbc.valuation.model.enums.Status.CONFIG_NOT_EXIST;
@@ -32,8 +39,16 @@ import static com.icbc.valuation.model.enums.Status.CONFIG_NOT_EXIST;
 @Slf4j
 public class ValuationConfigServiceImpl extends BaseService implements ValuationConfigService {
 
+
     @Resource
     ValuationConfigMapper valuationConfigMapper;
+    // TODO: attriConfig数据库可优化,将fieldScores再拆成一个表
+    @Resource
+    AttriConfigMapper attriConfigMapper;
+    @Resource
+    RangeConfigMapper rangeConfigMapper;
+    @Resource
+    CompuFormulaMapper compuFormulaMapper;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -47,9 +62,9 @@ public class ValuationConfigServiceImpl extends BaseService implements Valuation
         }
         //String configId = randomUUID().toString();
         ValuationConfig valuationConfig = new ValuationConfig()//.setId(configId)
-                .setName(name).setDescription(description).setStatus(status)
-                .setAttriConfigs(attriConfigs).setRangeConfigs(rangeConfigs).setCompuFormulas(compuFormulas);
+                .setName(name).setDescription(description).setStatus(status);
         valuationConfigMapper.insert(valuationConfig);
+
         return success(result, valuationConfig.getId());
     }
 
@@ -64,12 +79,26 @@ public class ValuationConfigServiceImpl extends BaseService implements Valuation
             putMsg(result, CONFIG_NOT_EXIST, id);
             return result;
         }
+
+        List<AttriConfig> attriConfigs = attriConfigMapper.selectList(new LambdaQueryWrapper<AttriConfig>()
+                .eq(AttriConfig::getConfigId, valuationConfig.getId()));
+        List<AttriConfigModel> attriConfigModels = attriConfigs.stream().map(attriConfig ->
+                new AttriConfigModel().setName(attriConfig.getName())
+                .setFieldScores(JSON.parseObject(attriConfig.getFieldScores(), new TypeReference<List<FieldScore>>() {})))
+                .collect(Collectors.toList());
+
+        List<RangeConfig> rangeConfigs = rangeConfigMapper.selectList(new LambdaQueryWrapper<RangeConfig>()
+                .eq(RangeConfig::getConfigId, valuationConfig.getId()));
+
+        List<CompuFormula> compuFormulas = compuFormulaMapper.selectList(new LambdaQueryWrapper<CompuFormula>()
+                .eq(CompuFormula::getConfigId, valuationConfig.getId()));
+
         ValuationConfigModel valuationConfigModel = new ValuationConfigModel().setId(valuationConfig.getId())
                 .setName(valuationConfig.getName()).setDescription(valuationConfig.getDescription())
                 .setStatus(valuationConfig.getStatus())
-                .setAttriConfigs(JSON.parseObject(valuationConfig.getAttriConfigs(),  new TypeReference<List<AttriConfig>>() {}))
-                .setRangeConfigs(JSON.parseArray(valuationConfig.getRangeConfigs(), CompuFormula.class))
-                .setCompuFormulas(JSON.parseArray(valuationConfig.getCompuFormulas(), CompuFormula.class));
+                .setAttriConfigs(attriConfigModels)
+                .setRangeConfigs(rangeConfigs)
+                .setCompuFormulas(compuFormulas);
 
         return success(result, valuationConfigModel);
     }
@@ -89,6 +118,7 @@ public class ValuationConfigServiceImpl extends BaseService implements Valuation
                         .or().like(ValuationConfig::getModifyUser, queryString).or().like(ValuationConfig::getDescription, queryString)
             );
         }
+//        queryWrapper.orderByAsc(ValuationConfig::getName);
         Page<ValuationConfig> page = new Page<>(currentPage, pageSize);
         IPage<ValuationConfig> iPage = valuationConfigMapper.selectPage(page, queryWrapper);
 
@@ -113,11 +143,27 @@ public class ValuationConfigServiceImpl extends BaseService implements Valuation
         }
 
         valuationConfig.setName(valuationConfigModel.getName())
-                .setDescription(valuationConfigModel.getDescription()).setStatus(valuationConfigModel.getStatus())
-                .setAttriConfigs(JSON.toJSONString(valuationConfigModel.getAttriConfigs()))
-                .setRangeConfigs(JSON.toJSONString(valuationConfigModel.getRangeConfigs()))
-                .setCompuFormulas(JSON.toJSONString(valuationConfigModel.getCompuFormulas()));
+                .setDescription(valuationConfigModel.getDescription()).setStatus(valuationConfigModel.getStatus());
         int updateRes = valuationConfigMapper.updateById(valuationConfig);
+
+        attriConfigMapper.delete(new LambdaQueryWrapper<AttriConfig>().eq(AttriConfig::getConfigId, valuationConfig.getId()));
+        valuationConfigModel.getAttriConfigs().forEach(attriConfigModel -> {
+            AttriConfig attriConfig = new AttriConfig().setConfigId(valuationConfig.getId())
+                    .setName(attriConfigModel.getName()).setFieldScores(JSON.toJSONString(attriConfigModel.getFieldScores()));
+            attriConfigMapper.insert(attriConfig);
+        });
+
+        rangeConfigMapper.delete(new LambdaQueryWrapper<RangeConfig>().eq(RangeConfig::getConfigId, valuationConfig.getId()));
+        valuationConfigModel.getRangeConfigs().forEach(rangeConfig -> {
+            rangeConfig.setConfigId(valuationConfig.getId());
+            rangeConfigMapper.insert(rangeConfig);
+        });
+
+        compuFormulaMapper.delete(new LambdaQueryWrapper<CompuFormula>().eq(CompuFormula::getConfigId, valuationConfig.getId()));
+        valuationConfigModel.getCompuFormulas().forEach(compuFormula -> {
+            compuFormula.setConfigId(valuationConfig.getId());
+            compuFormulaMapper.insert(compuFormula);
+        });
 
         return success(result, updateRes);
     }

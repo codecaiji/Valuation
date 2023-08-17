@@ -1,11 +1,10 @@
-DROP TABLE IF EXISTS `valuation_configs`;
-CREATE TABLE `valuation_configs`
+DROP TABLE IF EXISTS `VALUATION_CONFIGS`;
+CREATE TABLE `VALUATION_CONFIGS`
 (
     `id`                       number(20) NOT NULL AUTO_INCREMENT COMMENT 'key',
     `name`                     varchar(255) NOT NULL COMMENT 'config name',
-    `attri_configs`            varchar(255)  COMMENT '',
-    `range_configs`            varchar(255) NOT NULL COMMENT '',
-    `compu_formulas`            varchar(255) NOT NULL COMMENT '',
+    `status`                 varchar(255)  COMMENT '',
+    `description`            varchar(1023) NOT NULL COMMENT '',
 
     `create_time`              datetime     NOT NULL COMMENT 'create time',
     `create_user`              varchar(255) NOT NULL COMMENT 'create user',
@@ -26,3 +25,23 @@ for each row
 begin
 select  ID_INCREMENT.nextval into :new.ID from DUAL;
 end;
+
+
+CREATE TABLE "SCOTT"."COMPU_FORMULAS" (
+    "CONFIG_ID" NUMBER NOT NULL,
+    "TARGET_NAME" VARCHAR2(255) NOT NULL,
+    "FUNC" VARCHAR2(255) NOT NULL,
+    CONSTRAINT "VALUATION_CONFIG_ID" FOREIGN KEY ("CONFIG_ID") REFERENCES "VALUATION_CONFIGS" ("ID") ON DELETE CASCADE
+)
+CREATE TABLE "SCOTT"."RANGE_CONFIG" (
+      "CONFIG_ID" NUMBER NOT NULL,
+      "TARGET_NAME" VARCHAR2(255) NOT NULL,
+      "FUNC" VARCHAR2(255) NOT NULL,
+      CONSTRAINT "VALUATION_CONFIG_ID" FOREIGN KEY ("CONFIG_ID") REFERENCES "VALUATION_CONFIGS" ("ID") ON DELETE CASCADE
+)
+CREATE TABLE "SCOTT"."ATTRI_CONFIG" (
+    "CONFIG_ID" NUMBER NOT NULL,
+    "NAME" VARCHAR2(255) NOT NULL,
+    "FIELD_SCORES" VARCHAR2(4000) NOT NULL,
+    CONSTRAINT "VALUATION_CONFIG_ID" FOREIGN KEY ("CONFIG_ID") REFERENCES "VALUATION_CONFIGS" ("ID") ON DELETE CASCADE
+)

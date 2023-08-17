@@ -1,5 +1,7 @@
 package com.icbc.valuation.model;
 
+import com.icbc.valuation.entity.CompuFormula;
+import com.icbc.valuation.entity.RangeConfig;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -16,9 +18,9 @@ public class ValuationConfigModel {
 
     private String status;
 
-    private List<AttriConfig> attriConfigs; //Map<String, Map<String, Double>>
+    private List<AttriConfigModel> attriConfigs; //Map<String, Map<String, Double>>
 
-    private List<CompuFormula> rangeConfigs;
+    private List<RangeConfig> rangeConfigs;
 
     private List<CompuFormula> compuFormulas;
 

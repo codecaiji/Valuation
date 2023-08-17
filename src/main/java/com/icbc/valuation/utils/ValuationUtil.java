@@ -1,8 +1,9 @@
 package com.icbc.valuation.utils;
 
 import com.googlecode.aviator.AviatorEvaluator;
-import com.icbc.valuation.model.AttriConfig;
-import com.icbc.valuation.model.CompuFormula;
+import com.icbc.valuation.entity.RangeConfig;
+import com.icbc.valuation.model.AttriConfigModel;
+import com.icbc.valuation.entity.CompuFormula;
 import com.icbc.valuation.model.FieldScore;
 import com.icbc.valuation.model.SheetData;
 import lombok.extern.slf4j.Slf4j;
@@ -59,10 +60,10 @@ public class ValuationUtil {
         return outputList;
     }
 
-    public static Map<String, Map<String, Double>> attriListToMap(List<AttriConfig> attriConfigs) {
+    public static Map<String, Map<String, Double>> attriListToMap(List<AttriConfigModel> attriConfigs) {
         Map<String, Map<String, Double>> attriConfigsMap = new HashMap<>();
 
-        for (AttriConfig attriConfig : attriConfigs) {
+        for (AttriConfigModel attriConfig : attriConfigs) {
             Map<String, Double> attriConfigMap = new HashMap<>();
 
             for (FieldScore fieldScore : attriConfig.getFieldScores()) {
@@ -74,7 +75,7 @@ public class ValuationUtil {
     }
 
     public static void transToScoresByConfig(List<SheetData> uploadData,
-        Map<String, Map<String, Double>> attriConfigs, List<CompuFormula> rangeConfigs) {
+        Map<String, Map<String, Double>> attriConfigs, List<RangeConfig> rangeConfigs) {
         if (CollectionUtils.isEmpty(uploadData)) {
             return;
         }
@@ -84,7 +85,7 @@ public class ValuationUtil {
     }
     public static List<Map<String, Object>> transToScoreByConfig(
             List<Map<String, Object>> params, Map<String, Map<String, Double>> attriConfigs,
-            List<CompuFormula> rangeConfigs) {
+            List<RangeConfig> rangeConfigs) {
         List<Map<String, Object>> attriScores = transToScoreByAttriConfig(attriConfigs, params);
         return transToScoreByRangeConfig(rangeConfigs, attriScores);
     }
@@ -114,7 +115,7 @@ public class ValuationUtil {
         return attriScores;
     }
 
-    public static List<Map<String, Object>> transToScoreByRangeConfig(List<CompuFormula> rangeConfigs, List<Map<String, Object>> params) {
+    public static List<Map<String, Object>> transToScoreByRangeConfig(List<RangeConfig> rangeConfigs, List<Map<String, Object>> params) {
         List<Map<String, Object>> rangeScores = new LinkedList<>();
         if (CollectionUtils.isEmpty(rangeConfigs) || CollectionUtils.isEmpty(params)) {
             return params;
@@ -122,11 +123,11 @@ public class ValuationUtil {
         for (Map<String, Object> param : params) {
             Map<String, Object> rangeScore = new HashMap<>();
             for (Map.Entry<String, Object> entry : param.entrySet()) {
-                for (CompuFormula valueConfig : rangeConfigs) {
+                for (RangeConfig rangeConfig : rangeConfigs) {
                     try {
-                        if (entry.getKey().equals(valueConfig.getTargetName())) {
-                            Object output = AviatorEvaluator.execute(valueConfig.getFunc(), param);
-                            rangeScore.put(valueConfig.getTargetName(), output);
+                        if (entry.getKey().equals(rangeConfig.getTargetName())) {
+                            Object output = AviatorEvaluator.execute(rangeConfig.getFunc(), param);
+                            rangeScore.put(rangeConfig.getTargetName(), output);
                             entry.setValue(output);
                         } else {
                             rangeScore.put(entry.getKey(), Double.parseDouble(entry.getValue().toString()));
