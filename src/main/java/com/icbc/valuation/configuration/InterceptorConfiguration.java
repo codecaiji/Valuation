@@ -22,9 +22,11 @@ public class InterceptorConfiguration implements WebMvcConfigurer {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://localhost:3000");
+        /*config.addAllowedOrigin("http://localhost:3000");
         config.addAllowedOrigin("http://192.168.100.164:3000/");
         config.addAllowedOrigin("http://192.168.43.146:3000/");
+        config.addAllowedOrigin("http://192.168.43.146:12345/");*/
+        config.addAllowedOriginPattern("*");
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);
